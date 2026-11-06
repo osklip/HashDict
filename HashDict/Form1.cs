@@ -1,87 +1,71 @@
-using System.Diagnostics;
-using HashDict.Core;
-
 namespace HashDict;
 
-// Obsługa interfejsu: zdarzenia kontrolek i wyświetlanie zawartości słownika.
-// Cała logika tablicy mieszającej znajduje się w bibliotece HashDict.Core.
+// Okno programu. Podpina metody słownika pod przyciski i pokazuje jego zawartość.
+// Cała logika słownika jest w klasie ChainedHashTable.
 public partial class Form1 : Form
 {
-    // Powyżej tej liczby kubełków widok pokazuje tylko niepuste.
-    private const int ShowOnlyUsedAbove = 256;
-
-    // Maksymalna liczba linii w widoku (duże tablice nie spowalniają okna).
-    private const int MaxListedBuckets = 2000;
-
+    // Nasz słownik.
     private readonly ChainedHashTable table = new();
 
     public Form1()
     {
         InitializeComponent();
         RefreshView();
-        labelStatus.Text = "Wpisz klucz i wartość, a następnie kliknij „Dodaj / zmień”.";
     }
 
-    // ---------- Zdarzenia ----------
-
+    // Przycisk "Dodaj / zmień".
     private void buttonAdd_Click(object? sender, EventArgs e)
     {
-        if (!TryReadKey(out string key))
+        string? key = ReadKey();
+        if (key == null)
             return;
 
-        string value = textBoxValue.Text;
-
-        long start = Stopwatch.GetTimestamp();
-        bool added = table.Add(key, value);
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(start);
-
+        bool isNew = table.Add(key, textBoxValue.Text);
         int bucket = table.GetBucketIndex(key);
         RefreshView(bucket);
 
-        string action = added ? $"Dodano klucz „{key}”" : $"Zmieniono wartość klucza „{key}”";
-        labelStatus.Text = $"{action} (kubełek {bucket}, pozycja w łańcuchu {table.GetChainPosition(key)}). " +
-                           $"Czas: {Methods.FormatDuration(elapsed)}";
+        labelStatus.Text = isNew
+            ? $"Dodano klucz „{key}” do kubełka {bucket}."
+            : $"Zmieniono wartość klucza „{key}” (kubełek {bucket}).";
     }
 
+    // Przycisk "Szukaj".
     private void buttonFind_Click(object? sender, EventArgs e)
     {
-        if (!TryReadKey(out string key))
+        string? key = ReadKey();
+        if (key == null)
             return;
 
-        long start = Stopwatch.GetTimestamp();
-        bool found = table.TryGet(key, out string? value);
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(start);
+        string? value = table.Get(key);
 
-        if (!found)
+        if (value == null)
         {
-            labelStatus.Text = $"Nie znaleziono klucza „{key}”. Czas: {Methods.FormatDuration(elapsed)}";
+            labelStatus.Text = $"Nie znaleziono klucza „{key}”.";
             return;
         }
 
-        int bucket = table.GetBucketIndex(key);
         textBoxValue.Text = value;
+        int bucket = table.GetBucketIndex(key);
         RefreshView(bucket);
-
-        labelStatus.Text = $"Znaleziono klucz „{key}” (kubełek {bucket}, pozycja w łańcuchu {table.GetChainPosition(key)}). " +
-                           $"Czas: {Methods.FormatDuration(elapsed)}";
+        labelStatus.Text = $"Znaleziono klucz „{key}” w kubełku {bucket}.";
     }
 
+    // Przycisk "Usuń".
     private void buttonRemove_Click(object? sender, EventArgs e)
     {
-        if (!TryReadKey(out string key))
+        string? key = ReadKey();
+        if (key == null)
             return;
 
-        long start = Stopwatch.GetTimestamp();
         bool removed = table.Remove(key);
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(start);
-
         RefreshView();
 
         labelStatus.Text = removed
-            ? $"Usunięto klucz „{key}”. Czas: {Methods.FormatDuration(elapsed)}"
-            : $"Nie ma klucza „{key}”, nic nie usunięto.";
+            ? $"Usunięto klucz „{key}”."
+            : $"Nie ma klucza „{key}”.";
     }
 
+    // Przycisk "Wyczyść".
     private void buttonClear_Click(object? sender, EventArgs e)
     {
         table.Clear();
@@ -89,80 +73,43 @@ public partial class Form1 : Form
         labelStatus.Text = "Wyczyszczono słownik.";
     }
 
-    private void buttonGenerate_Click(object? sender, EventArgs e)
+    // Czyta klucz z pola tekstowego. Zwraca null, gdy pole jest puste.
+    private string? ReadKey()
     {
-        int count = (int)numericUpDownCount.Value;
-        var entries = Methods.GenerateEntries(count, seed: Environment.TickCount);
-        int before = table.Count;
+        string key = textBoxKey.Text.Trim();
 
-        long start = Stopwatch.GetTimestamp();
-        foreach (var pair in entries)
-            table.Add(pair.Key, pair.Value);
-        TimeSpan elapsed = Stopwatch.GetElapsedTime(start);
-
-        RefreshView();
-
-        int added = table.Count - before;
-        labelStatus.Text = $"Dodano {added} nowych kluczy ({count - added} istniejących zaktualizowano). " +
-                           $"Czas: {Methods.FormatDuration(elapsed)}, średnio {Methods.FormatDuration(elapsed / count)} na parę.";
-    }
-
-    // ---------- Operacje na interfejsie ----------
-
-    // Odczytuje klucz z pola tekstowego (białe znaki na brzegach są pomijane).
-    private bool TryReadKey(out string key)
-    {
-        key = textBoxKey.Text.Trim();
-
-        if (key.Length > 0)
-            return true;
-
-        labelStatus.Text = "Wpisz klucz.";
-        textBoxKey.Focus();
-        return false;
-    }
-
-    // Odświeża listę kubełków i statystyki. highlightBucket >= 0 zaznacza wskazany kubełek.
-    private void RefreshView(int highlightBucket = -1)
-    {
-        List<List<KeyValuePair<string, string>>> chains = table.GetChains();
-        int width = chains.Count.ToString().Length;
-        bool onlyUsed = chains.Count > ShowOnlyUsedAbove;
-
-        int selectedIndex = -1;
-        int listed = 0;
-        bool truncated = false;
-
-        listBoxBuckets.BeginUpdate();
-        listBoxBuckets.Items.Clear();
-
-        for (int i = 0; i < chains.Count; i++)
+        if (key == "")
         {
-            if (onlyUsed && chains[i].Count == 0)
-                continue;
-
-            if (listed >= MaxListedBuckets)
-            {
-                truncated = true;
-                break;
-            }
-
-            if (i == highlightBucket)
-                selectedIndex = listBoxBuckets.Items.Count;
-
-            listBoxBuckets.Items.Add(Methods.FormatBucket(i, width, chains[i]));
-            listed++;
+            labelStatus.Text = "Wpisz klucz.";
+            return null;
         }
 
-        if (selectedIndex >= 0)
-            listBoxBuckets.SelectedIndex = selectedIndex;
+        return key;
+    }
 
-        listBoxBuckets.EndUpdate();
+    // Odświeża listę kubełków i statystyki.
+    // Jeśli podano numer kubełka, zaznacza go na liście.
+    private void RefreshView(int selectBucket = -1)
+    {
+        listBoxBuckets.Items.Clear();
 
-        string note = onlyUsed ? " | Widok: tylko niepuste kubełki" : "";
-        if (truncated)
-            note += $" (pierwsze {MaxListedBuckets})";
+        for (int i = 0; i < table.BucketCount; i++)
+        {
+            var items = table.GetBucket(i);
 
-        labelStats.Text = Methods.FormatStats(table.GetStats()) + note;
+            // Przykład linii: [3] (ala: kot) -> (ola: pies)
+            string line = $"[{i}] ";
+            if (items.Count == 0)
+                line += "-";
+            else
+                line += string.Join(" -> ", items.Select(p => $"({p.Key}: {p.Value})"));
+
+            listBoxBuckets.Items.Add(line);
+        }
+
+        if (selectBucket >= 0)
+            listBoxBuckets.SelectedIndex = selectBucket;
+
+        labelStats.Text = $"Elementy: {table.Count} | Kubełki: {table.BucketCount} | Kolizje: {table.CountCollisions()}";
     }
 }

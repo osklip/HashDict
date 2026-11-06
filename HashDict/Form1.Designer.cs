@@ -25,13 +25,9 @@ namespace HashDict
             buttonFind = new Button();
             buttonRemove = new Button();
             buttonClear = new Button();
-            labelGenerate = new Label();
-            numericUpDownCount = new NumericUpDown();
-            buttonGenerate = new Button();
             labelStats = new Label();
             listBoxBuckets = new ListBox();
             labelStatus = new Label();
-            ((System.ComponentModel.ISupportInitialize)numericUpDownCount).BeginInit();
             SuspendLayout();
             //
             // labelKey
@@ -96,46 +92,18 @@ namespace HashDict
             //
             buttonClear.Location = new Point(376, 56);
             buttonClear.Name = "buttonClear";
-            buttonClear.Size = new Size(150, 32);
+            buttonClear.Size = new Size(100, 32);
             buttonClear.TabIndex = 5;
-            buttonClear.Text = "Wyczyść słownik";
+            buttonClear.Text = "Wyczyść";
             buttonClear.UseVisualStyleBackColor = true;
             buttonClear.Click += buttonClear_Click;
-            //
-            // labelGenerate
-            //
-            labelGenerate.AutoSize = true;
-            labelGenerate.Location = new Point(16, 108);
-            labelGenerate.Name = "labelGenerate";
-            labelGenerate.Text = "Losowe pary:";
-            //
-            // numericUpDownCount
-            //
-            numericUpDownCount.Location = new Point(120, 104);
-            numericUpDownCount.Maximum = new decimal(new int[] { 100000, 0, 0, 0 });
-            numericUpDownCount.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numericUpDownCount.Name = "numericUpDownCount";
-            numericUpDownCount.Size = new Size(100, 27);
-            numericUpDownCount.TabIndex = 6;
-            numericUpDownCount.ThousandsSeparator = true;
-            numericUpDownCount.Value = new decimal(new int[] { 20, 0, 0, 0 });
-            //
-            // buttonGenerate
-            //
-            buttonGenerate.Location = new Point(230, 100);
-            buttonGenerate.Name = "buttonGenerate";
-            buttonGenerate.Size = new Size(180, 32);
-            buttonGenerate.TabIndex = 7;
-            buttonGenerate.Text = "Dodaj losowe pary";
-            buttonGenerate.UseVisualStyleBackColor = true;
-            buttonGenerate.Click += buttonGenerate_Click;
             //
             // labelStats
             //
             labelStats.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            labelStats.Location = new Point(16, 146);
+            labelStats.Location = new Point(16, 104);
             labelStats.Name = "labelStats";
-            labelStats.Size = new Size(868, 24);
+            labelStats.Size = new Size(668, 24);
             //
             // listBoxBuckets
             //
@@ -143,24 +111,24 @@ namespace HashDict
             listBoxBuckets.Font = new Font("Consolas", 10F);
             listBoxBuckets.HorizontalScrollbar = true;
             listBoxBuckets.IntegralHeight = false;
-            listBoxBuckets.Location = new Point(16, 176);
+            listBoxBuckets.Location = new Point(16, 134);
             listBoxBuckets.Name = "listBoxBuckets";
-            listBoxBuckets.Size = new Size(868, 380);
-            listBoxBuckets.TabIndex = 8;
+            listBoxBuckets.Size = new Size(668, 290);
+            listBoxBuckets.TabIndex = 6;
             //
             // labelStatus
             //
             labelStatus.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            labelStatus.Location = new Point(16, 566);
+            labelStatus.Location = new Point(16, 434);
             labelStatus.Name = "labelStatus";
-            labelStatus.Size = new Size(868, 24);
+            labelStatus.Size = new Size(668, 24);
             //
             // Form1
             //
             AcceptButton = buttonAdd;
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(900, 600);
+            ClientSize = new Size(700, 470);
             Controls.Add(labelKey);
             Controls.Add(textBoxKey);
             Controls.Add(labelValue);
@@ -169,9 +137,6 @@ namespace HashDict
             Controls.Add(buttonFind);
             Controls.Add(buttonRemove);
             Controls.Add(buttonClear);
-            Controls.Add(labelGenerate);
-            Controls.Add(numericUpDownCount);
-            Controls.Add(buttonGenerate);
             Controls.Add(labelStats);
             Controls.Add(listBoxBuckets);
             Controls.Add(labelStatus);
@@ -179,7 +144,6 @@ namespace HashDict
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Słownik z haszowaniem (łańcuchowa obsługa kolizji)";
-            ((System.ComponentModel.ISupportInitialize)numericUpDownCount).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -194,9 +158,6 @@ namespace HashDict
         private Button buttonFind;
         private Button buttonRemove;
         private Button buttonClear;
-        private Label labelGenerate;
-        private NumericUpDown numericUpDownCount;
-        private Button buttonGenerate;
         private Label labelStats;
         private ListBox listBoxBuckets;
         private Label labelStatus;

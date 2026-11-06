@@ -1,31 +1,26 @@
 # HashDict
 
-Słownik (klucz -> wartość) oparty na tablicy mieszającej z łańcuchową obsługą kolizji,
-z interfejsem Windows Forms.
+Słownik (klucz -> wartość) oparty na tablicy mieszającej. Kolizje są rozwiązywane
+metodą łańcuchową. Interfejs: Windows Forms.
 
-## Struktura
+## Pliki
 
-- `HashDict.Core` – logika bez interfejsu:
-  - `ChainedHashTable` – tablica mieszająca (funkcja skrótu djb2, kolizje rozwiązywane listami
-    jednokierunkowymi w kubełkach, automatyczne dwukrotne powiększanie przy współczynniku
-    zapełnienia powyżej 0,75),
-  - `Methods` – funkcje pomocnicze (generowanie danych, formatowanie widoku i czasu).
-- `HashDict` – aplikacja Windows Forms (`Form1` tylko podpina metody pod zdarzenia).
-- `HashDict.Tests` – testy jednostkowe (xUnit).
+- `HashDict/ChainedHashTable.cs` – słownik (funkcja skrótu DJB2, kubełki jako listy, powiększanie tablicy).
+- `HashDict/Form1.cs` – okno: podpina metody słownika pod przyciski.
+- `HashDict/Form1.Designer.cs` – układ okna (generowany przez Visual Studio).
 
 ## Uruchomienie
 
 ```
 dotnet run --project HashDict
-dotnet test
 ```
 
 Wymagany jest .NET SDK 10 (Windows).
 
 ## Jak to działa
 
-Indeks kubełka to `hash(klucz) % liczba_kubełków`. Elementy o tym samym indeksie tworzą
-łańcuch (nowe trafiają na początek). Operacje dodawania, szukania i usuwania przeglądają
-tylko jeden łańcuch, więc przy równomiernym rozkładzie kluczy działają w średnim czasie O(1).
-
-Statystyka „kolizje" w aplikacji to liczba elementów, które nie są pierwsze w swoim kubełku.
+1. Funkcja skrótu zamienia klucz na liczbę.
+2. Numer kubełka = skrót % liczba kubełków.
+3. Kubełek to początek listy. Klucze o tym samym numerze (kolizja) trafiają na tę samą listę.
+4. Szukanie, dodawanie i usuwanie przeglądają tylko jedną listę (średnio O(1)).
+5. Gdy tablica jest zapełniona w ponad 75%, podwajamy liczbę kubełków i przenosimy elementy.
